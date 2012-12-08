@@ -99,7 +99,7 @@ choice = foldr (<|>) (fail "")
 
 -- | @between open close p@ parses @open@, followed by @p@ and finally
 --   @close@. Only the value of @p@ is returned.
-between :: GenParser b open -> GenParser b a -> GenParser b close -> GenParser b a
+between :: Show a => GenParser b open -> GenParser b a -> GenParser b close -> GenParser b a
 between open p close = do _ <- open
                           x <- p
                           _ <- close

@@ -42,4 +42,3 @@ p1 `choose` p2 = StateT (\e -> doParse p1 e ++ doParse p2 e)
 p1 <|> p2 = StateT (\e -> case doParse (p1 `choose` p2) e of
                              []   -> []
                              x:_  -> [x])
-
