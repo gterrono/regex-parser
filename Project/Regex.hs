@@ -1,4 +1,9 @@
+
+-- Advanced Programming, Final Project
+-- by Greg Terrono gterrono, Aaditya R. Shirodkar aadis
+
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults  #-}
+
 module Regex where
 
 data Reg = Eps
