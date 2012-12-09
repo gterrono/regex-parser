@@ -22,7 +22,7 @@ acceptExact Eps _             = True
 acceptExact (Sym c) u         = [c] == u  
 acceptExact (Alt p q) u       = acceptExact p u || acceptExact q u
 acceptExact (Seq p q) u       = or [acceptExact p u1 && acceptExact q u2 | (u1, u2) <- split u]
-acceptExact (Rep _) _         = True
+acceptExact (Rep p) u         = or ((acceptExact p u):[and [acceptExact p u1 | u1 <- ps] | ps <- parts u])
 acceptExact Any u             = u /= []
 acceptExact (ZeroOrOne p) u   = u == [] || acceptExact p u
 acceptExact (StartsWith _) _  = False
@@ -34,13 +34,28 @@ accept (StartsWith r) u              = or [acceptExact r p | p <- substringsFrom
 accept (EndsWith r) u                = or [acceptExact r p | p <- substringsWithEnd u]
 accept r u                           = or [acceptExact r p | p <- allSubstrings u]
 
+matches :: Reg -> String -> Either String [String]
+matches (EndsWith (StartsWith r)) u = if acceptExact r u then Right [u] else Left "No matches"
+matches (StartsWith r) u = helper2 substringsFromStart r u
+matches (EndsWith r) u  = helper2 substringsWithEnd r u
+matches r u = helper2 allSubstrings r u
+
+helper2 :: (String -> [String]) -> Reg -> String -> Either String [String]
+helper2 f r u = case foldr helper [] [if acceptExact r p then Just p else Nothing | p <- f u] of
+   [] -> Left "No matches"
+   l  -> Right l
+
+helper :: Maybe a -> [a] -> [a]
+helper (Just s) l = s:l
+helper Nothing l  = l
+
 allSubstrings :: String -> [String]
 allSubstrings []       = []
-allSubstrings l@(_:cs) = (map (\x -> take x l) [1..length l]) ++ allSubstrings cs
+allSubstrings l@(_:cs) = (map (\x -> take x l) [0..length l]) ++ allSubstrings cs
 
 substringsFromStart :: String -> [String]
 substringsFromStart [] = []
-substringsFromStart l  = map (\x -> take x l) [1..length l]
+substringsFromStart l  = map (\x -> take x l) [0..length l]
 
 substringsWithEnd :: String -> [String]
 substringsWithEnd [] = []
