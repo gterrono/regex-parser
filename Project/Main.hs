@@ -28,6 +28,7 @@ instance PP Reg where
   pp (Alt (Sym a) (Sym b)) = (pp (Sym a)) <> PP.char '|' <> (pp (Sym b))
   pp (Alt (Sym a) Any)     = (pp (Sym a)) <> PP.char '|' <> (pp Any)
   pp (Alt Any (Sym a))     = (pp Any) <> PP.char '|' <> (pp (Sym a))
+  pp (Alt Any Any)         = (pp Any) <> PP.char '|' <> (pp Any)
   pp (Alt Any a)           = (pp Any) <> PP.char '|' <> PP.parens (pp a)
   pp (Alt a Any)           = PP.parens (pp a) <> PP.char '|' <> (pp Any)
   pp (Alt (Sym a) b)       = (pp (Sym a)) <> PP.char '|' <> PP.parens (pp b)
