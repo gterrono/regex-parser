@@ -13,7 +13,7 @@ data Reg = Eps
   | Rep Reg
   | Any 
   | ZeroOrOne Reg
-  deriving Show
+  deriving (Show, Eq)
 
 acceptExact:: Reg -> String -> Bool
 acceptExact Eps _           = True -- Matches ANYTHING

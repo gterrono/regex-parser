@@ -29,7 +29,7 @@ instance PP Reg where
   pp (Alt (Sym a) b) = (pp (Sym a)) <> PP.char '|' <> PP.parens (pp b)
   pp (Alt a (Sym b)) = PP.parens (pp a) <> PP.char '|' <> (pp (Sym b))
   pp (Alt a b) = PP.parens (pp a) <> PP.char '|' <> PP.parens (pp b)
-  --pp (Seq a (Rep a)) = (pp a) <> PP.char '+'
+  pp (Seq a (Rep b)) | a == b = (pp a) <> PP.char '+'
   pp (Seq a b) = (pp a) <> (pp b)
   pp (Rep (Sym a)) = (pp (Sym a)) <> PP.char '*'
   pp (Rep a) = PP.parens (pp a) <> PP.char '*'
