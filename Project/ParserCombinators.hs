@@ -20,8 +20,8 @@ type ParseError = String
 parse :: GenParser b a -> [b] -> Either ParseError a
 parse parser bs = case (doParse parser bs) of 
     []      -> Left  "No parses"
-    [(a,_)] -> Right a
-    _       -> Left  "Multiple parses"
+    [(a,[])] -> Right a
+    _       -> Left  "Incorrect parses"
     
 parseFromFile :: GenParser Char a -> String -> IO (Either ParseError a)
 parseFromFile parser filename = do 

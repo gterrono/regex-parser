@@ -26,6 +26,8 @@ class PP a where
 instance PP Reg where
   pp (Sym a)               = PP.char a
   pp (Alt (Sym a) (Sym b)) = (pp (Sym a)) <> PP.char '|' <> (pp (Sym b))
+  pp (Alt Any a)           = (pp Any) <> PP.char '|' <> (pp a)
+  pp (Alt a Any)           = (pp a) <> PP.char '|' <> (pp Any)
   pp (Alt (Sym a) b)       = (pp (Sym a)) <> PP.char '|' <> PP.parens (pp b)
   pp (Alt a (Sym b))       = PP.parens (pp a) <> PP.char '|' <> (pp (Sym b))
   pp (Alt a b)             = PP.parens (pp a) <> PP.char '|' <> PP.parens (pp b)
@@ -33,6 +35,7 @@ instance PP Reg where
    | a == b                = (pp a) <> PP.char '+'
   pp (Seq a b)             = (pp a) <> (pp b)
   pp (Rep (Sym a))         = (pp (Sym a)) <> PP.char '*'
+  pp (Rep Any)             = (pp Any) <> PP.char '*'
   pp (Rep a)               = PP.parens (pp a) <> PP.char '*'
   pp Any                   = PP.char '.'
   pp (ZeroOrOne a)         = (pp a) <> PP.char '?'
