@@ -13,6 +13,7 @@ data Reg = Eps
   | Rep Reg
   | Any 
   | ZeroOrOne Reg
+  | StartsWith Reg
   deriving (Show, Eq)
 
 acceptExact:: Reg -> String -> Bool

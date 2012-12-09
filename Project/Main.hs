@@ -45,7 +45,7 @@ display = show . pp
 ---------------------------------------------
 
 symP :: GenParser Char Reg
-symP = liftM Sym $ satisfy (\x -> x /= ')')
+symP = liftM Sym $ satisfy (\x -> x /= ')' && x /= '^')
 
 anyP :: GenParser Char Reg
 anyP = char '.' >> return Any
@@ -77,4 +77,11 @@ statementP = sequenceP <|> nonSequenceP where
     s2 <- statementP
     return (Seq s1 s2)
   nonSequenceP = choice [altP, repP, zeroP, oneP, parensP]
+
+startsWithP :: GenParser Char Reg
+startsWithP = startsP <|> statementP where
+  startsP = do
+    char '^'
+    s1 <- statementP
+    return (StartsWith s1)
 
