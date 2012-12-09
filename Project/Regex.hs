@@ -13,23 +13,30 @@ data Reg = Eps
   | Rep Reg
   | Any 
   | ZeroOrOne Reg
+  | StartsWith Reg
   deriving (Show, Eq)
 
 acceptExact:: Reg -> String -> Bool
-acceptExact Eps _           = True -- Matches ANYTHING
+acceptExact Eps _           = True
 acceptExact (Sym c) u       = [c] == u  
 acceptExact (Alt p q) u     = acceptExact p u || acceptExact q u
 acceptExact (Seq p q) u     = or [acceptExact p u1 && acceptExact q u2 | (u1, u2) <- split u]
-acceptExact (Rep _) _       = True --or ((acceptExact p u):[and [acceptExact p u1 | u1 <- ps] | ps <- parts u])
-acceptExact Any u           = u/=[]
+acceptExact (Rep _) _       = True
+acceptExact Any u           = u /= []
 acceptExact (ZeroOrOne p) u = u == [] || acceptExact p u
+acceptExact (StartsWith _) _ = False
 
 accept :: Reg -> String -> Bool
+accept (StartsWith r) u = or [acceptExact r p | p <- substringsFromStart u]
 accept r u = or [acceptExact r p | p <- allSubstrings u]
 
 allSubstrings :: String -> [String]
 allSubstrings [] = []
-allSubstrings l@(_:cs) = (map (\x -> take x l) [1..length l])++allSubstrings cs
+allSubstrings l@(_:cs) = (map (\x -> take x l) [1..length l]) ++ allSubstrings cs
+
+substringsFromStart :: String -> [String]
+substringsFromStart [] = []
+substringsFromStart l = map (\x -> take x l) [1..length l]
 
 split :: [a] -> [([a], [a])]
 split []     = [([], [])]
