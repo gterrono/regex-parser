@@ -59,6 +59,11 @@ symP = liftM Sym $ satisfy (\x -> x /= ')' && x /= '^' && x /= '$')
 anyP :: GenParser Char Reg
 anyP = char '.' >> return Any
 
+escapeP :: GenParser Char Reg
+escapeP = do
+  char '\\'
+  liftM Sym getC
+
 parensP :: GenParser Char Reg
 parensP = choice [between (char '(') statementP ((char ')')), anyP, symP]
 
@@ -85,7 +90,7 @@ statementP = sequenceP <|> nonSequenceP where
     s1 <- nonSequenceP
     s2 <- statementP
     return (Seq s1 s2)
-  nonSequenceP = choice [altP, repP, zeroP, oneP, parensP]
+  nonSequenceP = choice [escapeP, altP, repP, zeroP, oneP, parensP]
 
 endsWithP :: GenParser Char Reg
 endsWithP = endsP <|> startsWithP where
