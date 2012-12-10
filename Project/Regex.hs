@@ -36,12 +36,12 @@ accept r u                           = or [acceptExact r p | p <- allSubstrings 
 
 matches :: Reg -> String -> Either String [String]
 matches (EndsWith (StartsWith r)) u = if acceptExact r u then Right [u] else Left "No matches"
-matches (StartsWith r) u = helper2 substringsFromStart r u
-matches (EndsWith r) u  = helper2 substringsWithEnd r u
-matches r u = helper2 allSubstrings r u
+matches (StartsWith r) u = helper2 accept substringsFromStart r u
+matches (EndsWith r) u  = helper2 accept substringsWithEnd r u
+matches r u = helper2 acceptExact allSubstrings r u
 
-helper2 :: (String -> [String]) -> Reg -> String -> Either String [String]
-helper2 f r u = case foldr helper [] [if acceptExact r p then Just p else Nothing | p <- f u] of
+helper2 :: (Reg -> String -> Bool) -> (String -> [String]) -> Reg -> String -> Either String [String]
+helper2 g f r u = case foldr helper [] [if g r p then Just p else Nothing | p <- f u] of
    [] -> Left "No matches"
    l  -> Right l
 
