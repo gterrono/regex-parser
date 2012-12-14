@@ -25,7 +25,7 @@ class PP a where
 
 instance PP Reg where
   pp (Sym a)               = PP.char a
-  pp (Alt (Sym a) (Sym b)) = (pp (Sym a)) <> PP.char '|' <> (pp (Sym b))
+  {- pp (Alt (Sym a) (Sym b)) = (pp (Sym a)) <> PP.char '|' <> (pp (Sym b))
   pp (Alt (Sym a) Any)     = (pp (Sym a)) <> PP.char '|' <> (pp Any)
   pp (Alt Any (Sym a))     = (pp Any) <> PP.char '|' <> (pp (Sym a))
   pp (Alt Any Any)         = (pp Any) <> PP.char '|' <> (pp Any)
@@ -33,17 +33,20 @@ instance PP Reg where
   pp (Alt a Any)           = PP.parens (pp a) <> PP.char '|' <> (pp Any)
   pp (Alt (Sym a) b)       = (pp (Sym a)) <> PP.char '|' <> PP.parens (pp b)
   pp (Alt a (Sym b))       = PP.parens (pp a) <> PP.char '|' <> (pp (Sym b))
-  pp (Alt a b)             = PP.parens (pp a) <> PP.char '|' <> PP.parens (pp b)
+  pp (Alt a b)             = PP.parens (pp a) <> PP.char '|' <> PP.parens (pp b) -}
+  pp (Alt a b)             = (pp a) <> PP.char '|' <> (pp b)
   pp (Seq a (Rep b)) 
    | a == b                = (pp a) <> PP.char '+'
   pp (Seq a b)             = (pp a) <> (pp b)
-  pp (Rep (Sym a))         = (pp (Sym a)) <> PP.char '*'
+  {- pp (Rep (Sym a))         = (pp (Sym a)) <> PP.char '*'
   pp (Rep Any)             = (pp Any) <> PP.char '*'
-  pp (Rep a)               = PP.parens (pp a) <> PP.char '*'
+  pp (Rep a)               = PP.parens (pp a) <> PP.char '*' -}
+  pp (Rep a)               = (pp a) <> PP.char '*'
   pp Any                   = PP.char '.'
   pp (ZeroOrOne a)         = (pp a) <> PP.char '?'
   pp (StartsWith a)        = PP.char '^' <> (pp a)
   pp (EndsWith a)          = (pp a) <> PP.char '$' 
+  pp (Extract a)           = PP.parens (pp a)
 
 display :: PP a => a -> String
 display = show . pp
@@ -60,7 +63,7 @@ anyP :: GenParser Char Reg
 anyP = char '.' >> return Any
 
 parensP :: GenParser Char Reg
-parensP = choice [between (char '(') statementP ((char ')')), anyP, symP]
+parensP = choice [between (char '(') (liftM Extract statementP) ((char ')')), anyP, symP]
 
 statementP :: GenParser Char Reg
 statementP = sequenceP <|> nonSequenceP where

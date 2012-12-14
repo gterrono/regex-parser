@@ -15,30 +15,76 @@ data Reg = Eps
   | ZeroOrOne Reg
   | StartsWith Reg
   | EndsWith Reg
+  | Extract Reg
   deriving (Show, Eq)
 
-acceptExact :: Reg -> String -> Bool
-acceptExact Eps _             = True
-acceptExact (Sym c) u         = [c] == u  
-acceptExact (Alt p q) u       = acceptExact p u || acceptExact q u
-acceptExact (Seq p q) u       = or [acceptExact p u1 && acceptExact q u2 | (u1, u2) <- split u]
-acceptExact (Rep p) u         = or ((acceptExact p u):[and [acceptExact p u1 | u1 <- ps] | ps <- parts u])
-acceptExact Any u             = u /= []
-acceptExact (ZeroOrOne p) u   = u == [] || acceptExact p u
-acceptExact (StartsWith _) _  = False
-acceptExact (EndsWith _) _    = False
+type Extraction = [String]
+
+data Result = Exists Bool
+  | Matches [Extraction]
+  deriving Show
+
+acceptExact :: Reg -> String -> Result
+acceptExact Eps _             = Exists True
+acceptExact (Sym c) u         = Exists ([c] == u)  
+acceptExact (Alt p q) u       = combinesOr [(acceptExact p u),  (acceptExact q u)]
+acceptExact (Seq p q) u       = combinesOr [combinesAnd [acceptExact p u1, acceptExact q u2] | (u1, u2) <- split u]
+acceptExact (Rep p) u         = combinesOr $ (acceptExact p u) : [combinesAnd [acceptExact p u1 | u1 <- ps] | ps <- parts u]
+acceptExact Any u             = Exists (u /= [])
+acceptExact (ZeroOrOne p) u   = combinesOr [Exists(u == []), (acceptExact p u)]
+acceptExact (StartsWith _) _  = Exists False
+acceptExact (EndsWith _) _    = Exists False
+acceptExact (Extract p) u     = case (matches p u) of
+  Left _   -> Exists False
+  Right v  -> Matches [v]
+
+combinesAnd :: [Result] -> Result
+combinesAnd = foldr combiner (Exists True) where
+  combiner (Exists u) (Exists v)   = Exists (u && v)
+  combiner (Exists u) (Matches v)  = if u then (Matches v) else Exists False
+  combiner (Matches v) (Exists u)  = if u then (Matches v) else Exists False
+  combiner (Matches u) (Matches v) = Matches (u ++ v)
+
+combinesOr :: [Result] -> Result
+combinesOr = foldr combiner (Exists False) where
+  combiner (Exists u) (Exists v)   = Exists (u || v)
+  combiner (Exists _) (Matches v)  = Matches v
+  combiner (Matches v) (Exists _)  = Matches v
+  combiner (Matches u) (Matches v) = Matches (u ++ v)
+
+acceptExtract :: Reg -> String -> [Extraction]
+acceptExtract p u = resultToExtraction (acceptResult p u)
+  where
+    acceptResult (EndsWith (StartsWith r)) v   = acceptExact r v
+    acceptResult (StartsWith r) v              = combinesOr [acceptExact r s | s <- substringsFromStart v]
+    acceptResult (EndsWith r) v                = combinesOr [acceptExact r s | s <- substringsWithEnd v]
+    acceptResult r v                           = combinesOr [acceptExact r s | s <- allSubstrings v]
 
 accept :: Reg -> String -> Bool
-accept (EndsWith (StartsWith r)) u   = acceptExact r u
-accept (StartsWith r) u              = or [acceptExact r p | p <- substringsFromStart u]
-accept (EndsWith r) u                = or [acceptExact r p | p <- substringsWithEnd u]
-accept r u                           = or [acceptExact r p | p <- allSubstrings u]
+accept p u = resultToBool (acceptResult p u)
+  where
+    acceptResult (EndsWith (StartsWith r)) v   = acceptExact r v
+    acceptResult (StartsWith r) v              = combinesOr [acceptExact r s | s <- substringsFromStart v]
+    acceptResult (EndsWith r) v                = combinesOr [acceptExact r s | s <- substringsWithEnd v]
+    acceptResult r v                           = combinesOr [acceptExact r s | s <- allSubstrings v]
+
+resultToBool :: Result -> Bool
+resultToBool r = case r of
+                 Exists b -> b
+                 _ -> True
+
+resultToExtraction :: Result -> [Extraction]
+resultToExtraction r = case r of
+                       Exists _ -> []
+                       Matches b -> b
 
 matches :: Reg -> String -> Either String [String]
-matches (EndsWith (StartsWith r)) u = if acceptExact r u then Right [u] else Left "No matches"
+
+matches (EndsWith (StartsWith r)) u = if resultToBool (acceptExact r u) then Right [u] else Left "No matches"
 matches (StartsWith r) u = helper2 accept substringsFromStart r u
 matches (EndsWith r) u  = helper2 accept substringsWithEnd r u
-matches r u = helper2 acceptExact allSubstrings r u
+matches r u = helper2 (helper3 resultToBool acceptExact) allSubstrings r u where
+  helper3 f g s v = f (g s v)
 
 helper2 :: (Reg -> String -> Bool) -> (String -> [String]) -> Reg -> String -> Either String [String]
 helper2 g f r u = case foldr helper [] [if g r p then Just p else Nothing | p <- f u] of
