@@ -1,17 +1,9 @@
-
 -- Advanced Programming, Final Project
 -- by Greg Terrono gterrono, Aaditya R. Shirodkar aadis
 
-import ParserPrinter
+module ParserPrinter (returnBool, returnMatches, returnExtractions) where
 
-main :: IO () 
-main = do
-       putStrLn $ show $ returnBool "(a)." "ab"
-       return ()
-
-
-
-{-import Control.Monad
+import Control.Monad
 
 import Text.PrettyPrint.HughesPJ (Doc, (<+>),($$),(<>))
 import qualified Text.PrettyPrint.HughesPJ as PP
@@ -22,10 +14,6 @@ import ParserCombinators
 
 import Test.HUnit
 import Test.QuickCheck
-
-
-main :: IO () 
-main = return ()
 
 -- Pretty Printing a RegEx
 ---------------------------------------------
@@ -131,5 +119,5 @@ returnMatches a b = case (parse endsWithP a) of
 returnExtractions :: String -> String -> [[String]]
 returnExtractions a b = case (parse endsWithP a) of
   Left _  -> []
-  Right c -> acceptExtract c b -}
+  Right c -> acceptExtract c b
 
