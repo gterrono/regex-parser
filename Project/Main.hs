@@ -6,7 +6,7 @@ import ParserPrinter
 
 main :: IO () 
 main = do
-       putStrLn $ show $ returnBool "(a)." "ab"
+       putStrLn $ show $ returnExtractions "(a)." "ab"
        return ()
 
 

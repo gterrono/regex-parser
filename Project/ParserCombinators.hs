@@ -1,7 +1,6 @@
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults  #-}
 
--- CIS 552, University of Pennsylvania
--- based on Parsec and ReadP parsing libraries
+
 module ParserCombinators where
 
 -- import Parser
