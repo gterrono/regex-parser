@@ -184,7 +184,7 @@ display = show . pp
 
 -- | a Parser for symbols
 symP :: GenParser Char Reg
-symP = liftM Sym $ satisfy (\x -> x /= ')' && x /= '^' && x /= '$')
+symP = liftM Sym $ satisfy (\x -> and (map (x /=) [')', '^', '$', '*', '+', '|', '?']))
 
 -- | a Parser for the type Any
 anyP :: GenParser Char Reg
