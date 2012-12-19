@@ -119,5 +119,5 @@ returnMatches a b = case (parse endsWithP a) of
 returnExtractions :: String -> String -> [[String]]
 returnExtractions a b = case (parse endsWithP a) of
   Left _  -> []
-  Right c -> acceptExtract c b
+  Right c -> foldr (\(MWE x) y -> x:y) [] $ acceptExtract c b
 
