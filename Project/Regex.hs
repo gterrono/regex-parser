@@ -5,7 +5,6 @@
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults  #-}
 
 module Regex where
-import Control.Monad
 
 data Reg = Eps
   | Sym Char
@@ -37,9 +36,7 @@ acceptExact Any _             = Exists False
 acceptExact (ZeroOrOne p) u   = combinesOr [Exists(u == []), (acceptExact p u)]
 acceptExact (StartsWith _) _  = Exists False
 acceptExact (EndsWith _) _    = Exists False
-acceptExact (Extract p) u     = case (extracts p u) of
-  Left _   -> Exists False
-  Right v  -> Matches [v]
+acceptExact (Extract p) u     = if acceptExactToBool p u then Matches [MWE [u]] else Exists False
 
 combinesAnd :: [Result] -> Result
 combinesAnd = foldr combiner (Exists True) where
@@ -87,20 +84,20 @@ resultToExtraction r = case r of
   Exists _ -> []
   Matches b -> b
 
-extracts :: Reg -> String -> Either String MatchWithExtraction
-extracts r u = liftM MWE $ filterHelper acceptExactToBool return r u
-
+-- | Returns all of the ways a string matches a regex
 matches :: Reg -> String -> Either String [String]
 matches (EndsWith (StartsWith r)) u = filterHelper acceptExactToBool return r u
 matches (StartsWith r) u = filterHelper accept substringsFromStart r u
 matches (EndsWith r) u  = filterHelper accept substringsWithEnd r u
 matches r u = filterHelper acceptExactToBool allSubstrings r u
 
+-- | A commonly used pattern extracted into a higher ordered function
 filterHelper :: (Reg -> String -> Bool) -> (String -> [String]) -> Reg -> String -> Either String [String]
 filterHelper g f r u = case filter (\s -> g r s) (f u) of
    [] -> Left "No matches"
    l  -> Right l
 
+-- | Takes a regex and a string and returns if the regex matches it with nothing left over
 acceptExactToBool :: Reg -> String -> Bool
 acceptExactToBool r s = resultToBool (acceptExact r s)
 
@@ -112,15 +109,18 @@ substringsFromStart :: String -> [String]
 substringsFromStart [] = []
 substringsFromStart l  = map (\x -> take x l) [0..length l]
 
+-- | Returns all the substrings of a string that go until the end
 substringsWithEnd :: String -> [String]
 substringsWithEnd [] = []
 substringsWithEnd l  = map (\x -> drop x l) [0..(length l) - 1]
 
+-- | Takes a list and returns all the ways to split up that list into two parts
 split :: [a] -> [([a], [a])]
 split []     = [([], [])]
 split (c:cs) = ([], c:cs):[(c: s1, s2) | (s1, s2) <- split cs]
 
+-- | Takes a list and returns a list of all the the possible ways to split up the list
 parts :: [a] -> [[[a]]]
-parts []      = [[]]
+parts []     = [[]]
 parts [c]    = [[[c]]]
 parts (c:cs) = concat [[(c:p):ps, [c]:p:ps]| p:ps <- parts cs]
