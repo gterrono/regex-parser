@@ -22,15 +22,15 @@ type Extraction = [String]
 
 data Result = Exists Bool
   | Matches [Extraction]
-  deriving Show
-
+  deriving (Show, Eq)
 acceptExact :: Reg -> String -> Result
 acceptExact Eps _             = Exists True
 acceptExact (Sym c) u         = Exists ([c] == u)  
 acceptExact (Alt p q) u       = combinesOr [(acceptExact p u),  (acceptExact q u)]
 acceptExact (Seq p q) u       = combinesOr [combinesAnd [acceptExact p u1, acceptExact q u2] | (u1, u2) <- split u]
 acceptExact (Rep p) u         = combinesOr $ (acceptExact p u) : [combinesAnd [acceptExact p u1 | u1 <- ps] | ps <- parts u]
-acceptExact Any u             = Exists (u /= [])
+acceptExact Any [_]           = Exists True
+acceptExact Any _             = Exists False 
 acceptExact (ZeroOrOne p) u   = combinesOr [Exists(u == []), (acceptExact p u)]
 acceptExact (StartsWith _) _  = Exists False
 acceptExact (EndsWith _) _    = Exists False

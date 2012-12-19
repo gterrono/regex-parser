@@ -121,3 +121,25 @@ returnExtractions a b = case (parse endsWithP a) of
   Left _  -> []
   Right c -> acceptExtract c b
 
+testAcceptExact :: Test
+testAcceptExact = TestList[ 
+  acceptExact (Sym 'a') "a" ~?= Exists True,
+  acceptExact (Sym 'a') "ab" ~?= Exists False,
+  acceptExact (Sym 'a') "b" ~?= Exists False,
+  acceptExact Eps "a" ~?= Exists True,
+  acceptExact (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "b" ~?= Exists True,
+  acceptExact (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "ab" ~?= Exists True,
+  acceptExact (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "a" ~?= Exists False,
+  acceptExact (Seq (Sym 'a') (Seq (Sym 'b') (Sym 'c'))) "abc" ~?= Exists True,
+  acceptExact (Seq (Sym 'a') (Seq (Sym 'b') (Sym 'c'))) "a" ~?= Exists False,
+  acceptExact (Rep (Sym 'a')) "a" ~?= Exists True,
+  acceptExact (Rep (Sym 'a')) "" ~?= Exists True,
+  acceptExact (Rep (Sym 'a')) "aaaa" ~?= Exists True,
+  acceptExact (Rep (Sym 'a')) "b" ~?= Exists False,
+  acceptExact (Rep (Sym 'a')) "baaa" ~?= Exists False,
+  acceptExact Any "a" ~?= Exists True,
+  acceptExact Any "ab" ~?= Exists False,
+  acceptExact (ZeroOrOne (Sym 'a')) "" ~?= Exists True,
+  acceptExact (ZeroOrOne (Sym 'a')) "a" ~?= Exists True,
+  acceptExact (ZeroOrOne (Sym 'a')) "aa" ~?= Exists False,
+  acceptExact (ZeroOrOne (Sym 'a')) "b" ~?= Exists False] 
