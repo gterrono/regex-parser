@@ -4,17 +4,16 @@
 
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults  #-}
 
-module Regex (returnBool, returnMatches, returnExtractions) where
+module Regex (returnBool, returnMatches, returnExtractions, display, allTests) where
 import Control.Monad
 
-import Text.PrettyPrint.HughesPJ (Doc, (<+>),($$),(<>))
+import Text.PrettyPrint.HughesPJ (Doc, (<>))
 import qualified Text.PrettyPrint.HughesPJ as PP
 
 import ParserTrans
 import ParserCombinators
 
 import Test.HUnit
-import Test.QuickCheck hiding (Result)
 
 data Reg = Eps
   | Sym Char
@@ -152,6 +151,7 @@ class PP a where
   pp :: a -> Doc
 
 instance PP Reg where
+  pp Eps                   = PP.text ""
   pp (Sym a)               = PP.char a
   pp (Alt a b)             = (pp a) <> PP.char '|' <> (pp b)
   pp (Seq a (Rep b)) 
@@ -317,23 +317,23 @@ testMatches = TestList [
   matches (Sym 'a') "a" ~?= Right ["a"],
   matches (Sym 'a') "ab" ~?= Right ["a"],
   matches (Sym 'a') "b" ~?= Left "No matches",
-  matches Eps "a" ~?= Right ["", "a"],
+  matches Eps "a" ~?= Right ["","a",""],
   matches (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "b" ~?= Right ["b"],
   matches (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "ab" ~?= Right ["ab", "b"],
   matches (Alt (Seq (Sym 'a') (Sym 'b')) (Sym 'b')) "a" ~?= Left "No matches",
   matches (Seq (Sym 'a') (Seq (Sym 'b') (Sym 'c'))) "abc" ~?= Right ["abc"],
   matches (Seq (Sym 'a') (Seq (Sym 'b') (Sym 'c'))) "a" ~?= Left "No matches",
-  matches (Rep (Sym 'a')) "a" ~?= Right ["", "a"],
+  matches (Rep (Sym 'a')) "a" ~?= Right ["","a",""],
   matches (Rep (Sym 'a')) "" ~?= Right [""],
-  matches (Rep (Sym 'a')) "aaaa" ~?= Right ["","a","aa","aaa","aaaa","","a","aa","aaa","","a","aa","","a"],
-  matches (Rep (Sym 'a')) "b" ~?= Right [""],
-  matches (Rep (Sym 'a')) "ba" ~?= Right ["", "", "a"],
+  matches (Rep (Sym 'a')) "aaaa" ~?= Right ["","a","aa","aaa","aaaa","","a","aa","aaa","","a","aa","","a",""],
+  matches (Rep (Sym 'a')) "b" ~?= Right ["",""],
+  matches (Rep (Sym 'a')) "ba" ~?= Right ["","","a",""],
   matches Any "a" ~?= Right ["a"],
   matches Any "ab" ~?= Right ["a", "b"],
   matches (ZeroOrOne (Sym 'a')) "" ~?= Right [""],
-  matches (ZeroOrOne (Sym 'a')) "a" ~?= Right ["", "a"],
-  matches (ZeroOrOne (Sym 'a')) "aa" ~?= Right ["", "a", "", "a"],
-  matches (ZeroOrOne (Sym 'a')) "b" ~?= Right [""],
+  matches (ZeroOrOne (Sym 'a')) "a" ~?= Right ["", "a", ""],
+  matches (ZeroOrOne (Sym 'a')) "aa" ~?= Right ["", "a", "", "a", ""],
+  matches (ZeroOrOne (Sym 'a')) "b" ~?= Right ["", ""],
   matches (Extract (Sym 'a')) "a" ~?= Right ["a"],
   matches (Extract (Sym 'a')) "ab" ~?= Right ["a"],
   matches (Seq (Extract (Seq (Sym 'a') (Sym 'b'))) (Rep (Sym 'c'))) "ab" ~?= Right ["ab"],
@@ -374,16 +374,28 @@ testReturnBool = TestList[
   returnBool "a*b?c" "ab" ~?= False]
 
 testReturnExtractions :: Test
-testReturnExtractions = undefined
+testReturnExtractions = TestList[
+  returnExtractions "^abc" "ab" ~?= [],
+  returnExtractions "^a(bc)" "abcd" ~?= [MWE ["bc"]],
+  returnExtractions "^(abc)$" "abcd" ~?= [],
+  returnExtractions "^(abc)$" "abc" ~?= [MWE ["abc"]],
+  returnExtractions "(a|b)c" "abc" ~?= [MWE ["b"]],
+  returnExtractions "^(ab)(c)" "abc" ~?= [MWE ["ab", "c"]]]
 
 testReturnMatches :: Test
-testReturnMatches = undefined
+testReturnMatches =  TestList[
+  returnMatches "^abc" "ab" ~?= Left "No matches",
+  returnMatches "^a(bc)" "abcd" ~?= Right ["abc", "abcd"],
+  returnMatches "^(abc)$" "abcd" ~?= Left "No matches",
+  returnMatches "^(abc)$" "abc" ~?= Right ["abc"],
+  returnMatches "(a|b)c" "abc" ~?= Right ["bc"],
+  returnMatches "^(ab)(c)" "abc" ~?= Right ["abc"]]
 
 testSplit :: Test
-testSplit = undefined
+testSplit =  split "ab" ~?= [("","ab"),("a","b"),("ab","")]
 
 testParts :: Test
-testParts = undefined
+testParts = parts "ab" ~?= [["ab"],["a","b"]]
 
 allTests :: Test
-allTests = TestList [{-testParts, testSplit, testReturnMatches, testReturnExtractions, -}testReturnBool, testDisplay, testAcceptExtract, testMatches, testAccept, testAcceptExact]
+allTests = TestList [testParts, testSplit, testReturnMatches, testReturnExtractions, testReturnBool, testDisplay, testAcceptExtract, testMatches, testAccept, testAcceptExact]
