@@ -20,7 +20,7 @@ data Reg = Eps
   deriving (Show, Eq)
 
 newtype MatchWithExtraction = MWE [String]
-  deriving Show
+  deriving (Show, Eq)
 
 data Result = Exists Bool
   | Matches [MatchWithExtraction]
