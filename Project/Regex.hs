@@ -29,14 +29,18 @@ acceptExact :: Reg -> String -> Result
 acceptExact Eps _             = Exists True
 acceptExact (Sym c) u         = Exists ([c] == u)  
 acceptExact (Alt p q) u       = combinesOr [(acceptExact p u),  (acceptExact q u)]
-acceptExact (Seq p q) u       = combinesOr [combinesAnd [acceptExact p u1, acceptExact q u2] | (u1, u2) <- split u]
+acceptExact (Seq p q) u       = combinesOr [combineExtractions (acceptExact p u1) (acceptExact q u2) | (u1, u2) <- split u]
 acceptExact (Rep p) u         = combinesOr $ (acceptExact p u) : [combinesAnd [acceptExact p u1 | u1 <- ps] | ps <- parts u]
 acceptExact Any [_]           = Exists True
-acceptExact Any _             = Exists False 
-acceptExact (ZeroOrOne p) u   = combinesOr [Exists(u == []), (acceptExact p u)]
+acceptExact Any _             = Exists False
+acceptExact (ZeroOrOne p) u   = combinesOr [Exists (u == ""), (acceptExact p u)]
 acceptExact (StartsWith _) _  = Exists False
 acceptExact (EndsWith _) _    = Exists False
 acceptExact (Extract p) u     = if acceptExactToBool p u then Matches [MWE [u]] else Exists False
+
+combineExtractions :: Result -> Result -> Result
+combineExtractions (Matches [MWE e1]) (Matches [MWE e2]) = Matches [MWE (e1 ++ e2)]
+combineExtractions r1 r2 = combinesAnd [r1, r2]
 
 combinesAnd :: [Result] -> Result
 combinesAnd = foldr combiner (Exists True) where
@@ -102,16 +106,16 @@ acceptExactToBool :: Reg -> String -> Bool
 acceptExactToBool r s = resultToBool (acceptExact r s)
 
 allSubstrings :: String -> [String]
-allSubstrings []       = []
+allSubstrings ""       = [""]
 allSubstrings l@(_:cs) = substringsFromStart l ++ allSubstrings cs
 
 substringsFromStart :: String -> [String]
-substringsFromStart [] = []
+substringsFromStart "" = [""]
 substringsFromStart l  = map (\x -> take x l) [0..length l]
 
 -- | Returns all the substrings of a string that go until the end
 substringsWithEnd :: String -> [String]
-substringsWithEnd [] = []
+substringsWithEnd "" = []
 substringsWithEnd l  = map (\x -> drop x l) [0..(length l) - 1]
 
 -- | Takes a list and returns all the ways to split up that list into two parts
