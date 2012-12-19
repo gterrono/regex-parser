@@ -116,8 +116,8 @@ returnMatches a b = case (parse endsWithP a) of
   Left _  -> Left "Not a valid Regex"
   Right c -> matches c b
 
-returnExtractions :: String -> String -> [[String]]
+returnExtractions :: String -> String -> [MatchWithExtraction]
 returnExtractions a b = case (parse endsWithP a) of
   Left _  -> []
-  Right c -> foldr (\(MWE x) y -> x:y) [] $ acceptExtract c b
+  Right c -> acceptExtract c b
 

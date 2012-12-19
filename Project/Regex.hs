@@ -91,7 +91,7 @@ extracts :: Reg -> String -> Either String MatchWithExtraction
 extracts r u = liftM MWE $ filterHelper acceptExactToBool substringsFromStart r u
 
 matches :: Reg -> String -> Either String [String]
-matches (EndsWith (StartsWith r)) u = if resultToBool (acceptExact r u) then Right [u] else Left "No matches"
+matches (EndsWith (StartsWith r)) u = filterHelper acceptExactToBool return r u
 matches (StartsWith r) u = filterHelper accept substringsFromStart r u
 matches (EndsWith r) u  = filterHelper accept substringsWithEnd r u
 matches r u = filterHelper acceptExactToBool allSubstrings r u
