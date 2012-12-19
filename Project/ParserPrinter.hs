@@ -22,22 +22,10 @@ class PP a where
 
 instance PP Reg where
   pp (Sym a)               = PP.char a
-  {- pp (Alt (Sym a) (Sym b)) = (pp (Sym a)) <> PP.char '|' <> (pp (Sym b))
-  pp (Alt (Sym a) Any)     = (pp (Sym a)) <> PP.char '|' <> (pp Any)
-  pp (Alt Any (Sym a))     = (pp Any) <> PP.char '|' <> (pp (Sym a))
-  pp (Alt Any Any)         = (pp Any) <> PP.char '|' <> (pp Any)
-  pp (Alt Any a)           = (pp Any) <> PP.char '|' <> PP.parens (pp a)
-  pp (Alt a Any)           = PP.parens (pp a) <> PP.char '|' <> (pp Any)
-  pp (Alt (Sym a) b)       = (pp (Sym a)) <> PP.char '|' <> PP.parens (pp b)
-  pp (Alt a (Sym b))       = PP.parens (pp a) <> PP.char '|' <> (pp (Sym b))
-  pp (Alt a b)             = PP.parens (pp a) <> PP.char '|' <> PP.parens (pp b) -}
   pp (Alt a b)             = (pp a) <> PP.char '|' <> (pp b)
   pp (Seq a (Rep b)) 
    | a == b                = (pp a) <> PP.char '+'
   pp (Seq a b)             = (pp a) <> (pp b)
-  {- pp (Rep (Sym a))         = (pp (Sym a)) <> PP.char '*'
-  pp (Rep Any)             = (pp Any) <> PP.char '*'
-  pp (Rep a)               = PP.parens (pp a) <> PP.char '*' -}
   pp (Rep a)               = (pp a) <> PP.char '*'
   pp Any                   = PP.char '.'
   pp (ZeroOrOne a)         = (pp a) <> PP.char '?'
