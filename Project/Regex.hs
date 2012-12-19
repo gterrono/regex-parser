@@ -24,7 +24,7 @@ newtype MatchWithExtraction = MWE [String]
 
 data Result = Exists Bool
   | Matches [MatchWithExtraction]
-  deriving Show
+  deriving (Show, Eq)
 
 acceptExact :: Reg -> String -> Result
 acceptExact Eps _             = Exists True
