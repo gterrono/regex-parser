@@ -213,3 +213,43 @@ testMatches = TestList [
   matches (Seq (Seq Any (ZeroOrOne (Seq (Sym 'c') (Alt (Sym 'a') (Sym 'b'))))) (Rep (Sym 'd'))) "xcadddd" ~?= Right ["x","xca","xcad","xcadd","xcaddd","xcadddd","c","a","ad","add","addd","adddd","d","dd","ddd","dddd","d","dd","ddd","d","dd","d"],
   matches (Seq (Seq Any (ZeroOrOne (Seq (Sym 'c') (Alt (Sym 'a') (Sym 'b'))))) (Rep (Sym 'd'))) "xddd" ~?= Right ["x","xd","xdd","xddd","d","dd","ddd","d","dd","d"],
   matches (Seq (Seq Any (ZeroOrOne (Seq (Sym 'c') (Alt (Sym 'a') (Sym 'b'))))) (Rep (Sym 'd'))) "xcacad" ~?= Right ["x","xca","c","a","aca","acad","c","a","ad","d"]]
+
+testAcceptExtract :: Test
+testAcceptExtract = TestList [
+  acceptExtract (Sym 'a') "a" ~?= [],
+  acceptExtract (Extract (Sym 'a')) "a" ~?= [MWE ["a"]],
+  acceptExtract (Extract (Rep (Sym 'a'))) "a" ~?= [MWE [""], MWE ["a"], MWE [""]],
+  acceptExtract (StartsWith (Extract (Seq (Sym 'a') (Sym 'b')))) "abc" ~?= [MWE ["ab"]],
+  acceptExtract (StartsWith (Seq (Extract (Seq (Sym 'a') (Sym 'b'))) (Sym 'c'))) "abc" ~?= [MWE ["ab"]],
+  acceptExtract (StartsWith (Seq (Extract (Seq (Sym 'a') (Sym 'b'))) (Extract (Sym 'c')))) "abc" ~?= [MWE ["ab", "c"]],
+  acceptExtract (EndsWith (StartsWith (Extract (Seq (Sym 'a') (Sym 'b'))))) "ab" ~?= [MWE ["ab"]],
+  acceptExtract (EndsWith (StartsWith (Extract (Seq (Sym 'a') (Sym 'b'))))) "abc" ~?= []]
+
+
+testDisplay :: Test
+testDisplay = TestList[
+  display (Sym 'a') ~?= "a",
+  display (Extract (Seq (Sym 'a') (Rep (Sym 'b')))) ~?= "(ab*)",
+  display (Seq (Sym 'a') (Rep (Sym 'a'))) ~?= "a+",
+  display (StartsWith (ZeroOrOne (Extract (Alt (Extract (Seq (Rep (Sym 'a')) Any)) (Sym 'c'))))) ~?= "^((a*.)|c)?"]
+
+testReturnBool :: Test
+testReturnBool = TestList[
+  returnBool "^abc" "ab" ~?= False,
+  returnBool "^abc" "abcd" ~?= True,
+  returnBool "^abc$" "abcd" ~?= False,
+  returnBool "^abc$" "abc" ~?= True,
+  returnBool "a|bc" "abc" ~?= True,
+  returnBool "a*b?c" "ab" ~?= False]
+
+testReturnExtractions :: Test
+testReturnExtractions = undefined
+
+testReturnMatches :: Test
+testReturnMatches = undefined
+
+testSplit :: Test
+testSplit = undefined
+
+testParts :: Test
+testParts = undefined
