@@ -55,8 +55,8 @@ acceptExact (Extract p) u     = if acceptExactToBool p u then Matches [MWE [u]] 
 
 -- | Combines two results, appending the list of extractions together when appropriate
 combineExtractions :: Result -> Result -> Result
-combineExtractions (Matches [MWE e1]) (Matches [MWE e2]) = Matches [MWE (e1 ++ e2)] --TODO: Sort this out
-combineExtractions r1 r2 = combinesAnd [r1, r2]
+combineExtractions (Matches [MWE e1]) (Matches [MWE e2]) = Matches [MWE (e1 ++ e2)]
+combineExtractions r1 r2                                 = combinesAnd [r1, r2]
 
 -- | Combines a list of Results in an "and-like" fashion
 combinesAnd :: [Result] -> Result
@@ -102,20 +102,20 @@ accept p u = resultToBool (acceptResult p u) where
 resultToBool :: Result -> Bool
 resultToBool r = case r of
   Exists b -> b
-  _ -> True
+  _        -> True
 
 -- | Converts a result type for a call to return acceptExtract
 resultToExtraction :: Result -> [MatchWithExtraction]
 resultToExtraction r = case r of
-  Exists _ -> []
+  Exists _  -> []
   Matches b -> b
 
 -- | Returns all of the ways a string matches a regex
 matches :: Reg -> String -> Either String [String]
 matches (EndsWith (StartsWith r)) u = filterHelper acceptExactToBool return r u
-matches (StartsWith r) u = filterHelper accept substringsFromStart r u
-matches (EndsWith r) u  = filterHelper accept substringsWithEnd r u
-matches r u = filterHelper acceptExactToBool allSubstrings r u
+matches (StartsWith r) u            = filterHelper accept substringsFromStart r u
+matches (EndsWith r) u              = filterHelper accept substringsWithEnd r u
+matches r u                         = filterHelper acceptExactToBool allSubstrings r u
 
 -- | A commonly used pattern extracted into a higher ordered function
 filterHelper :: (Reg -> String -> Bool) -> (String -> [String]) -> Reg -> String -> Either String [String]
@@ -205,20 +205,20 @@ statementP :: GenParser Char Reg
 statementP = sequenceP <|> nonSequenceP where
   altP = do
     s1 <- choice [repP, zeroP, parensP]
-    _ <- char '|'
+    _  <- char '|'
     s2 <- parensP
     return (Alt s1 s2)
   repP = do
     s1 <- parensP
-    _ <- char '*'
+    _  <- char '*'
     return (Rep s1)
   zeroP = do
     s1 <- parensP
-    _ <- char '?'
+    _  <- char '?'
     return (ZeroOrOne s1)
   oneP = do
     s1 <- parensP
-    _ <- char '+'
+    _  <- char '+'
     return (Seq s1 (Rep s1))
   sequenceP = do
     s1 <- nonSequenceP
@@ -230,7 +230,7 @@ statementP = sequenceP <|> nonSequenceP where
 startsWithP :: GenParser Char Reg
 startsWithP = startsP <|> statementP where
   startsP = do
-    _ <- char '^'
+    _  <- char '^'
     s1 <- statementP
     return (StartsWith s1)
 
@@ -239,7 +239,7 @@ endsWithP :: GenParser Char Reg
 endsWithP = endsP <|> startsWithP where
   endsP = do
     s1 <- startsWithP
-    _ <- char '$'
+    _  <- char '$'
     return (EndsWith s1)
 
 -- Parses a RegEx and returns a result

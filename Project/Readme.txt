@@ -8,9 +8,7 @@ OVERVIEW: The top level, abstracted out file which contains the main method and 
 It essentially allows for the user to use one of the top level functions for RegEx matching, which are
 i) Checking if matches exist (returnBool)
 ii) Returning all matches against the RegEx (returnMatches)
-iii) Returning only those matches that are within the extract constructor of the RegEx ('(' & ')')
-
-It also allows a user to pretty print a RegEx expression as a string.
+iii) Returning only those matches that are within the extract constructor of the RegEx ('(' & ')') (returnExtractions)
 
 Also runs all the unit tests.
 
