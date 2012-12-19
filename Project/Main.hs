@@ -2,7 +2,7 @@
 -- Advanced Programming, Final Project
 -- by Greg Terrono gterrono, Aaditya R. Shirodkar aadis
 
-import ParserPrinter
+import Regex
 
 main :: IO () 
 main = do
