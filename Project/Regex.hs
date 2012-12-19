@@ -34,7 +34,7 @@ acceptExact Any u             = Exists (u /= [])
 acceptExact (ZeroOrOne p) u   = combinesOr [Exists(u == []), (acceptExact p u)]
 acceptExact (StartsWith _) _  = Exists False
 acceptExact (EndsWith _) _    = Exists False
-acceptExact (Extract p) u     = case (matches p u) of
+acceptExact (Extract p) u     = case (extracts p u) of
   Left _   -> Exists False
   Right v  -> Matches [v]
 
@@ -78,8 +78,11 @@ resultToExtraction r = case r of
                        Exists _ -> []
                        Matches b -> b
 
-matches :: Reg -> String -> Either String [String]
+extracts :: Reg -> String -> Either String [String]
+extracts r u = helper2 (helper3 resultToBool acceptExact) substringsFromStart r u where
+  helper3 f g s v = f (g s v)
 
+matches :: Reg -> String -> Either String [String]
 matches (EndsWith (StartsWith r)) u = if resultToBool (acceptExact r u) then Right [u] else Left "No matches"
 matches (StartsWith r) u = helper2 accept substringsFromStart r u
 matches (EndsWith r) u  = helper2 accept substringsWithEnd r u
