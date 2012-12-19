@@ -15,21 +15,26 @@ import ParserCombinators
 
 import Test.HUnit
 
+-- | The Regular Expression data type, supports characters, sequences, escaping, |, *, ?, +, ., ^, $, () 
 data Reg = Eps
-  | Sym Char
-  | Alt Reg Reg
-  | Seq Reg Reg
-  | Rep Reg
-  | Any 
-  | ZeroOrOne Reg
-  | StartsWith Reg
-  | EndsWith Reg
-  | Extract Reg
+  | Sym Char        -- a
+  | Alt Reg Reg     -- a|b
+  | Seq Reg Reg     -- ab
+  | Rep Reg         -- a*
+  | Any             -- .
+  | ZeroOrOne Reg   -- ?
+  | StartsWith Reg  -- ^
+  | EndsWith Reg    -- $
+  | Extract Reg     -- (a)
   deriving (Show, Eq)
 
-newtype MatchWithExtraction = MWE [String]
+-- | Allows for extracting everything within parens in a regular expression, and for multiple extractions
+-- within the same regular extraction.
+newtype MatchWithExtraction = MWE [String] 
   deriving (Show, Eq)
 
+-- | Result type, returns a boolean value for most regular expression types, except Extract, for which it
+-- returns the extraction.
 data Result = Exists Bool
   | Matches [MatchWithExtraction]
   deriving (Show, Eq)
@@ -93,11 +98,13 @@ accept p u = resultToBool (acceptResult p u) where
   acceptResult r v                         =
     combinesOr [acceptExact r s | s <- allSubstrings v]
 
+-- | Converts a result type to a Bool, for a call to accept
 resultToBool :: Result -> Bool
 resultToBool r = case r of
   Exists b -> b
   _ -> True
 
+-- | Converts a result type for a call to return acceptExtract
 resultToExtraction :: Result -> [MatchWithExtraction]
 resultToExtraction r = case r of
   Exists _ -> []
@@ -120,10 +127,12 @@ filterHelper g f r u = case filter (\s -> g r s) (f u) of
 acceptExactToBool :: Reg -> String -> Bool
 acceptExactToBool r s = resultToBool (acceptExact r s)
 
+-- | Returns all substrings of a list
 allSubstrings :: String -> [String]
 allSubstrings ""       = [""]
 allSubstrings l@(_:cs) = substringsFromStart l ++ allSubstrings cs
 
+-- | Returns all substrings of a list that start at the front
 substringsFromStart :: String -> [String]
 substringsFromStart "" = [""]
 substringsFromStart l  = map (\x -> take x l) [0..length l]
@@ -164,6 +173,7 @@ instance PP Reg where
   pp (EndsWith a)          = (pp a) <> PP.char '$' 
   pp (Extract a)           = PP.parens (pp a)
 
+-- | Pretty prints the PP Doc to a String
 display :: PP a => a -> String
 display = show . pp
 
@@ -172,20 +182,25 @@ display = show . pp
 -- Parsing a RegEx
 ---------------------------------------------
 
+-- | a Parser for symbols
 symP :: GenParser Char Reg
 symP = liftM Sym $ satisfy (\x -> x /= ')' && x /= '^' && x /= '$')
 
+-- | a Parser for the type Any
 anyP :: GenParser Char Reg
 anyP = char '.' >> return Any
 
+-- | a Parser to escape special characters, like ), ?, / etc.
 escapeP :: GenParser Char Reg
 escapeP = do
   _ <- char '\\'
   liftM Sym getC
 
+-- | a parser to returning Extractions from within parens
 parensP :: GenParser Char Reg
 parensP = choice [between (char '(') (liftM Extract statementP) ((char ')')), anyP, symP]
 
+-- | a parser for general statements
 statementP :: GenParser Char Reg
 statementP = sequenceP <|> nonSequenceP where
   altP = do
@@ -211,13 +226,7 @@ statementP = sequenceP <|> nonSequenceP where
     return (Seq s1 s2)
   nonSequenceP = choice [escapeP, altP, repP, zeroP, oneP, parensP]
 
-endsWithP :: GenParser Char Reg
-endsWithP = endsP <|> startsWithP where
-  endsP = do
-    s1 <- startsWithP
-    _ <- char '$'
-    return (EndsWith s1)
-
+-- | a Parser for '^'
 startsWithP :: GenParser Char Reg
 startsWithP = startsP <|> statementP where
   startsP = do
@@ -225,21 +234,40 @@ startsWithP = startsP <|> statementP where
     s1 <- statementP
     return (StartsWith s1)
 
+-- | a Parser for '$'
+endsWithP :: GenParser Char Reg
+endsWithP = endsP <|> startsWithP where
+  endsP = do
+    s1 <- startsWithP
+    _ <- char '$'
+    return (EndsWith s1)
+
+-- Parses a RegEx and returns a result
+-------------------------------------------------------
+
+-- | A top level function that parses the first string as a RegEx and matches it against
+-- the second String to return a Boolean value corresponding to 'accept'
 returnBool :: String -> String -> Bool
 returnBool a b = case (parse endsWithP a) of
   Left _  -> False
   Right c -> accept c b
 
+-- | A top level function that parses the first string as a RegEx and matches it against
+-- the second String to return a Boolean value corresponding to 'matches'
 returnMatches :: String -> String -> Either String [String]
 returnMatches a b = case (parse endsWithP a) of
   Left _  -> Left "Not a valid Regex"
   Right c -> matches c b
 
+-- | A top level function that parses the first string as a RegEx and matches it against
+-- the second String to return a Boolean value corresponding to 'acceptExtract'
 returnExtractions :: String -> String -> [MatchWithExtraction]
 returnExtractions a b = case (parse endsWithP a) of
   Left _  -> []
   Right c -> acceptExtract c b
 
+-- Testing Suite
+----------------------------------------------------
 testAcceptExact :: Test
 testAcceptExact = TestList[ 
   acceptExact (Sym 'a') "a" ~?= Exists True,
@@ -398,4 +426,14 @@ testParts :: Test
 testParts = parts "ab" ~?= [["ab"],["a","b"]]
 
 allTests :: Test
-allTests = TestList [testParts, testSplit, testReturnMatches, testReturnExtractions, testReturnBool, testDisplay, testAcceptExtract, testMatches, testAccept, testAcceptExact]
+allTests = TestList [
+  testParts, 
+  testSplit, 
+  testReturnMatches, 
+  testReturnExtractions, 
+  testReturnBool, 
+  testDisplay, 
+  testAcceptExtract, 
+  testMatches, 
+  testAccept, 
+  testAcceptExact ]

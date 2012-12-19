@@ -1,3 +1,7 @@
+
+-- Advanced Programming, Final Project
+-- by Greg Terrono gterrono, Aaditya R. Shirodkar aadis
+
 {-# OPTIONS -Wall -fwarn-tabs -fno-warn-type-defaults  #-}
 module ParserTrans (GenParser, Parser, 
                    getC,
@@ -7,7 +11,6 @@ module ParserTrans (GenParser, Parser,
                    doParse,  
                    ) where
 
---import Control.Monad.List
 import Control.Monad.State
 
 type GenParser e a = StateT [e] [] a
