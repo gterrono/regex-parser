@@ -25,6 +25,7 @@ data Result = Exists Bool
   | Matches [MatchWithExtraction]
   deriving (Show, Eq)
 
+-- | Returns whether the full string matches the regex, and any extractions if applicable
 acceptExact :: Reg -> String -> Result
 acceptExact Eps _             = Exists True
 acceptExact (Sym c) u         = Exists ([c] == u)  
@@ -38,10 +39,12 @@ acceptExact (StartsWith _) _  = Exists False
 acceptExact (EndsWith _) _    = Exists False
 acceptExact (Extract p) u     = if acceptExactToBool p u then Matches [MWE [u]] else Exists False
 
+-- | Combines two results, appending the list of extractions together when appropriate
 combineExtractions :: Result -> Result -> Result
-combineExtractions (Matches [MWE e1]) (Matches [MWE e2]) = Matches [MWE (e1 ++ e2)]
+combineExtractions (Matches [MWE e1]) (Matches [MWE e2]) = Matches [MWE (e1 ++ e2)] --TODO: Sort this out
 combineExtractions r1 r2 = combinesAnd [r1, r2]
 
+-- | Combines a list of Results in an "and-like" fashion
 combinesAnd :: [Result] -> Result
 combinesAnd = foldr combiner (Exists True) where
   combiner (Exists u) (Exists v)   = Exists (u && v)
@@ -49,6 +52,7 @@ combinesAnd = foldr combiner (Exists True) where
   combiner (Matches v) (Exists u)  = if u then (Matches v) else Exists False
   combiner (Matches u) (Matches v) = Matches (u ++ v)
 
+-- | Combines a list of Results in an "or-like" fashion
 combinesOr :: [Result] -> Result
 combinesOr = foldr combiner (Exists False) where
   combiner (Exists u) (Exists v)   = Exists (u || v)
@@ -56,6 +60,7 @@ combinesOr = foldr combiner (Exists False) where
   combiner (Matches v) (Exists _)  = Matches v
   combiner (Matches u) (Matches v) = Matches (u ++ v)
 
+-- | Returns the extractions resulting from the given regex being matched with the given string
 acceptExtract :: Reg -> String -> [MatchWithExtraction]
 acceptExtract p u = resultToExtraction (acceptResult p u) where
   acceptResult (EndsWith (StartsWith r)) v =
@@ -67,6 +72,7 @@ acceptExtract p u = resultToExtraction (acceptResult p u) where
   acceptResult r v                         =
     combinesOr [acceptExact r s | s <- allSubstrings v]
 
+-- | Returns whether or not a given regex matches a given string
 accept :: Reg -> String -> Bool
 accept p u = resultToBool (acceptResult p u) where
   acceptResult (EndsWith (StartsWith r)) v =
