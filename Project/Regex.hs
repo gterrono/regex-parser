@@ -106,7 +106,7 @@ acceptExactToBool r s = resultToBool (acceptExact r s)
 
 allSubstrings :: String -> [String]
 allSubstrings []       = []
-allSubstrings l@(_:cs) = (map (\x -> take x l) [0..length l]) ++ allSubstrings cs
+allSubstrings l@(_:cs) = substringsFromStart l ++ allSubstrings cs
 
 substringsFromStart :: String -> [String]
 substringsFromStart [] = []
