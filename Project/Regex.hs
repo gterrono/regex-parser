@@ -88,7 +88,7 @@ resultToExtraction r = case r of
   Matches b -> b
 
 extracts :: Reg -> String -> Either String MatchWithExtraction
-extracts r u = liftM MWE $ filterHelper acceptExactToBool substringsFromStart r u
+extracts r u = liftM MWE $ filterHelper acceptExactToBool return r u
 
 matches :: Reg -> String -> Either String [String]
 matches (EndsWith (StartsWith r)) u = filterHelper acceptExactToBool return r u
